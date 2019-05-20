@@ -89,3 +89,9 @@ class Grid:
         else:
             self.grid[action[0]][action[1]] = 2
             return 0 #observation
+    def is_terminal(self):
+        for i in range(self.rows):
+            for j in range(self.columns):
+                if self.grid[i,j] == 1: #There's still ships
+                    return False
+        return True

@@ -2,6 +2,7 @@ from ship import Ship
 from grid import Grid
 
 import random
+import copy
 
 class Simulator:
     def __init__(grid_x = 10, grid_y = 10, n_ships = 4):
@@ -35,4 +36,9 @@ class Simulator:
                     actions.append((i,j))
         return actions
     def sample(self, state, action):
+        successor_state = copy.deepcopy(self.battlefield)
+        observation = successor_state.apply_action(action)
+        reward = -1 #Reward per time-step (action taken)
+        if successor_state.is_terminal():
+            reward = 100 #Won the game
         return successor_state, observation, reward
