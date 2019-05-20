@@ -11,5 +11,3 @@ class Ship:
         self.y = random.randrange(columns)
         self.direction = random.randrange(4)
         self.length = length
-    def print_ship(self):
-        print('x: %d, y: %d, direction: %d, length: %d' %(self.x,self.y,self.direction,self.length))

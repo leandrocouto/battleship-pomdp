@@ -1,11 +1,32 @@
+from ship import Ship
+
 import numpy as np
+import random
 
 class Grid:
-    def __init__(self, rows, columns):
+    def __init__(self, rows = 10, columns = 10, n_ships = 4):
         self.rows = rows
         self.columns = columns
+        self.n_ships = n_ships
         self.grid = np.zeros((rows, columns))
-    
+        self.create_grid()
+    def create_grid(self):
+        ships = []
+        ship_length = 2
+        for _ in range(self.n_ships):
+            ship = Ship(random.randrange(self.rows), random.randrange(self.columns),
+                        random.randrange(4), ship_length)
+            ships.append(ship)
+            ship_length += 1
+        for ship in ships:
+            valid_ship = self.is_ship_valid(ship)
+            if valid_ship:
+                self.place_ship(ship)
+            else:
+                while not valid_ship:
+                    ship.generate_random_ship(self.rows, self.columns, ship.length)
+                    valid_ship = self.is_ship_valid(ship)
+                self.place_ship(ship)
     #Assume ship is already valid
     def place_ship(self,ship):
         for i in range(ship.length):
@@ -95,3 +116,11 @@ class Grid:
                 if self.grid[i,j] == 1: #There's still ships
                     return False
         return True
+    def valid_actions(self):
+        #List of tuples
+        actions = []
+        for i in range(self.rows):
+            for j in range(self.columns):
+                if self.grid[i][j] == 0 or self.grid[i][j] == 1:
+                    actions.append((i,j))
+        return actions

@@ -1,9 +1,9 @@
 class POMCP:
-    def __init__(self, generator, gamma, c, threshold, timeout, n_particles):
+    def __init__(self, Simulator, gamma, c, threshold, timeout, n_particles):
         self.gamma = gamma
         if gamma >= 1:
             raise ValueError('Gamma value should be less than 1.')
-        self.generator = generator
+        self.Simulator = Simulator
         self.threshold = threshold
         self.c = c
         self.timeout = timeout
