@@ -13,13 +13,13 @@ class Tree:
             # add node to tree
             self.nodes[self.count] = node 
             # inform parent node
-            self.nodes[parent][1][index] = self.count 
+            self.nodes[parent].children[index] = self.count 
         else:
             node = Node(parent, {}, 0, 0, [])
             # add node to tree
             self.nodes[self.count] = node
             # inform parent node
-            self.nodes[parent][1][index] = self.count
+            self.nodes[parent].children[index] = self.count
 	def prune_from_node(self, node):
 		print()
 	def update_root(self, node):
