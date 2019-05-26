@@ -1,7 +1,7 @@
 import copy
 class Node:
-	def __init__(self, parent, children, n_visits, value, particle_list):
-		self.parent = parent
+	def __init__(self, parent_key, children, n_visits, value, particle_list):
+		self.parent_key = parent_key
         #Dictionary where key is the index of the action/observation (node)
         #Value is the key of the child node
 		self.children = copy.copy(children)
