@@ -30,7 +30,13 @@ class Tree:
             self.expand(node_after_action, observation)
         # Get the nodes index
         return self.nodes[node_after_action].children[observation]
-    def prune(self, action, observation):
+    def prune(self, node_key):
+        children = self.nodes[node_key].children
+        self.nodes.pop(node_key)
+        for _, child in children.items():
+            self.prune(child)
+    
+    def prune_and_make_new_root(self, action, observation):
         # Get the node after action
         node_after_action = self.nodes[-1].children[action]
 
