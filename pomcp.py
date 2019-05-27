@@ -11,8 +11,21 @@ class POMCP:
         self.tree = Tree()
     def simulate(self):
         print()
-    def rollout(self):
-        print()
+    def rollout(self, s, depth):
+        # Check significance of update
+        if (self.gamma**depth < self.e or self.gamma == 0 ) and depth != 0:
+            return 0
+        
+        total_reward = 0
+        
+        # Pick random action; maybe change this later
+        # Need to also add observation in history if this is changed
+        action = choice(self.actions)
+        
+        # Generate states and observations
+        successor_state, _, reward = self.Simulator(s,action)
+        total_reward += reward + self.gamma*self.Rollout(successor_state, depth + 1)
+        return total_reward
     def search(self):
         particles = self.tree.nodes[-1].particle_list.copy()
         #Loop until timeout
