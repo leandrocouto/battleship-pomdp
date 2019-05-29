@@ -1,4 +1,6 @@
 from node import Node
+import numpy as np
+import copy
 
 class Tree:
     def __init__(self):
@@ -52,11 +54,16 @@ class Tree:
         # set new_root as root (key = -1)
         self.update_root(new_root)
     def update_root(self, new_root):
-        print()
+        self.nodes[-1] = copy.copy(self.nodes[new_root])
+        del self.nodes[new_root]
+        self.nodes[-1].parent_key = -1
+        # update children
+        for _ , child in self.nodes[-1].children.items():
+            self.nodes[child].parent_key = -1
     def is_leaf_node(self, node):
         if len(node.children) == 0:
             return True
         else:
             return False
-    def calculate_UCB(self, node):
-        print()
+    def calculate_UCB(self, parent_n_visits, current_n_visits, current_value, c):
+        return current_value + c*np.sqrt(np.log(parent_n_visits)/current_n_visits)
