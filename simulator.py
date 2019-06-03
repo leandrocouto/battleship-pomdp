@@ -1,3 +1,5 @@
+from grid import Grid
+
 #According to the article, the agent will use this simulator
 #as a generative model of the POMDP
 def Simulator(state, action):

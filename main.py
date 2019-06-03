@@ -2,7 +2,7 @@ from ship import Ship
 from grid import Grid
 from tree import Tree
 from random import choice
-
+'''
 battlefield = Grid()
 print(battlefield.grid)
 action1 = choice(battlefield.valid_actions())
@@ -34,6 +34,11 @@ for i in range(-1, 5):
         print(i, 'is leaf node')
     else:
         print(i, 'is not leaf node')
+'''
+particles = sample_random_particles(1200)
+for i in range(1200):
+    print(particles[i])
+    print()
 '''
 print('\nBefore pruning- Size of nodes{} = ', len(tree.nodes), '\n') 
 tree.prune(4)

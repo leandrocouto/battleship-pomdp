@@ -1,3 +1,6 @@
+from random import choice
+from simulator import Simulator
+
 class POMCP:
     def __init__(self, Simulator, gamma, c, threshold, timeout, n_particles):
         self.gamma = gamma
@@ -35,7 +38,7 @@ class POMCP:
             else:
                 state = choice(particles)
             self.simulate(state, -1, 0)
-        best_action, _ = self.SearchBest(-1, UseUCB = False)
+        best_action, _ = self.search_best(-1)
         return best_action
     def search_best(self, h):
         max_value = None
@@ -59,5 +62,30 @@ class POMCP:
                     resulta = action
         #return action-child_id values
         return resulta, result
+    def sample_random_particles(self, k):
+        particles = []
+        for _ in range(k): 
+            battlefield = Grid()
+            particles.append(battlefield.grid)
+        return particles
+    def particle_list_update(self, old_particle_list, real_action, real_observation):
+        updated_particle_list = []
+        particles_needing_noise = []
+        for _ in range(len(old_particle_list)):
+            sampled_belief_state = choice(old_particle_list)
+            _, observation_from_sample, _ = Simulator(sampled_belief_state, real_action)
+            if real_observation == observation_from_sample:
+                updated_particle_list.append(sampled_belief_state)
+            else:
+                particles_needing_noise.append(sampled_belief_state)
+        #if there are not enough particles, then we need particle reinvigoration
+        lack_of_particles = len(old_particle_list) - len(updated_particle_list)
+        while lack_of_particles != 0:
+            noised_belief_state = apply_noise_to_state(choice(particles_needing_noise))
+            _, observation_from_sample, _ = Simulator(noised_belief_state, real_action)
+            if real_observation == observation_from_sample:
+                updated_particle_list.append(noised_belief_state)
+                lack_of_particles -= 1
+        return updated_particle_list
 
     
