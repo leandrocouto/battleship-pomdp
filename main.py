@@ -1,7 +1,12 @@
 from ship import Ship
 from grid import Grid
 from tree import Tree
+from pomcp import POMCP
 from random import choice
+
+battlefield = Grid()
+pomcp = POMCP()
+pomcp.apply_noise_to_state(battlefield.grid)
 '''
 battlefield = Grid()
 print(battlefield.grid)
@@ -34,12 +39,11 @@ for i in range(-1, 5):
         print(i, 'is leaf node')
     else:
         print(i, 'is not leaf node')
-'''
+
 particles = sample_random_particles(1200)
 for i in range(1200):
     print(particles[i])
     print()
-'''
 print('\nBefore pruning- Size of nodes{} = ', len(tree.nodes), '\n') 
 tree.prune(4)
 print('\nAfter pruning 4 - Size of nodes{} = ', len(tree.nodes), '\n')

@@ -1,8 +1,9 @@
 from random import choice
 from simulator import Simulator
+from tree import Tree
 
 class POMCP:
-    def __init__(self, Simulator, gamma, c, threshold, timeout, n_particles):
+    def __init__(self, Simulator=1, gamma=0.1, c=1, threshold=1, timeout=1, n_particles=1):
         self.gamma = gamma
         if gamma >= 1:
             raise ValueError('Gamma value should be less than 1.')
@@ -87,5 +88,70 @@ class POMCP:
                 updated_particle_list.append(noised_belief_state)
                 lack_of_particles -= 1
         return updated_particle_list
+    def apply_noise_to_state(self, particle):
+        print(particle)
+        rows, columns = particle.shape
+        transformation = 1#choice([1,2,3])
+        if transformation == 1:
+            #2 ships of different sizes swap location
+            #list of tuples (coordinates)
+            ship_one = []
+            ship_two = []
+            #find ship_one
+            found_ship = False
+            for i in range(rows-1):
+                for j in range(columns-1):
+                    if particle[i][j] == 1 and particle[i][j+1] == 1:
+                        while particle[i][j] == 1:
+                            ship_one.append((i,j))
+                            j += 1
+                            if j == 10:
+                                break
+                        found_ship = True
+                        break
+                    elif particle[i][j] == 1 and particle[i+1][j] == 1:
+                        while particle[i][j] == 1:
+                            ship_one.append((i,j))
+                            i += 1
+                            if i == 10:
+                                break
+                        found_ship = True
+                        break
+                if found_ship:
+                    break
+            #find ship_two
+            found_ship = False
+            for i in range(rows-1):
+                for j in range(columns-1):
+                    if particle[i][j] == 1 and particle[i][j+1] == 1:
+                        #to not get the same ship_one
+                        if (i,j) in ship_one:
+                            continue
+                        while particle[i][j] == 1:
+                            ship_two.append((i,j))
+                            j += 1
+                            if j == 10:
+                                break
+                        found_ship = True
+                        break
+                    elif particle[i][j] == 1 and particle[i+1][j] == 1:
+                        #to not get the same ship_one
+                        if (i,j) in ship_one:
+                            continue
+                        while particle[i][j] == 1:
+                            ship_two.append((i,j))
+                            i += 1
+                            if i == 10:
+                                break
+                        found_ship = True
+                        break
+                if found_ship:
+                    break
+            print('ship one: ', ship_one)
+            print('ship two: ', ship_two)
+        elif transformation == 2:
+            print()
+        else:
+            print()
 
     
