@@ -1,6 +1,7 @@
 from random import choice
 from simulator import Simulator
 from tree import Tree
+import random
 
 class POMCP:
     def __init__(self, Simulator=1, gamma=0.1, c=1, threshold=1, timeout=1, n_particles=1):
@@ -88,67 +89,74 @@ class POMCP:
                 updated_particle_list.append(noised_belief_state)
                 lack_of_particles -= 1
         return updated_particle_list
+    def find_all_ships(self, particle):
+        rows, columns = particle.shape
+        ships = []
+        for i in range(rows):
+            for j in range(columns):
+                if particle[i][j] == 1 and (j+1) != columns:
+                    if particle[i][j+1] == 1:
+                        ship = []
+                        ship_already_found = False
+                        for found_ships in ships:
+                            for coordinate in found_ships:
+                                if (i,j) == coordinate:
+                                    ship_already_found = True
+                        if ship_already_found:
+                            continue
+                        k = j
+                        while particle[i][k] == 1:
+                            ship.append((i,k))
+                            k += 1
+                            if k == 10:
+                                break
+                        ships.append(ship)
+                if particle[i][j] == 1 and (i+1) != rows:
+                    if particle[i+1][j] == 1:
+                        ship = []
+                        ship_already_found = False
+                        for found_ships in ships:
+                            for coordinate in found_ships:
+                                if (i,j) == coordinate:
+                                    ship_already_found = True
+                        if ship_already_found:
+                            continue
+                        k = i
+                        while particle[k][j] == 1:
+                            ship.append((k,j))
+                            k += 1
+                            if k == 10:
+                                break
+                        ships.append(ship)
+        for ship in ships:
+            print(ship)
+        return ships
     def apply_noise_to_state(self, particle):
         print(particle)
         rows, columns = particle.shape
+        ships = self.find_all_ships(particle)
         transformation = 1#choice([1,2,3])
         if transformation == 1:
-            #2 ships of different sizes swap location
-            #list of tuples (coordinates)
+            #Two ships of different sizes swap location
+            #Choose two ships that have the same direction
             ship_one = []
             ship_two = []
-            #find ship_one
-            found_ship = False
-            for i in range(rows-1):
-                for j in range(columns-1):
-                    if particle[i][j] == 1 and particle[i][j+1] == 1:
-                        while particle[i][j] == 1:
-                            ship_one.append((i,j))
-                            j += 1
-                            if j == 10:
-                                break
-                        found_ship = True
+            while True:
+                indexes = random.sample(range(len(ships)), 2)
+                print('sorteados:' , indexes)
+                #Check if both are in a horizontal direction
+                if ships[indexes[0]][0][1] == ships[indexes[0]][1][1] - 1 and \
+                    ships[indexes[1]][0][1] == ships[indexes[1]][1][1] - 1:
+                        if len(ships[indexes[0]]) > len(ships[indexes[1]]):
+                            dif = len(ships[indexes[0]]) - len(ships[indexes[1]])
+                            if ships[indexes[1]][len(ships[indexes[1]]) - 1] + dif < 
                         break
-                    elif particle[i][j] == 1 and particle[i+1][j] == 1:
-                        while particle[i][j] == 1:
-                            ship_one.append((i,j))
-                            i += 1
-                            if i == 10:
-                                break
-                        found_ship = True
+                #Check if both are in a vertical direction
+                if ships[indexes[0]][0][0] == ships[indexes[0]][1][0] - 1 and \
+                    ships[indexes[1]][0][0] == ships[indexes[1]][1][0] - 1:
                         break
-                if found_ship:
-                    break
-            #find ship_two
-            found_ship = False
-            for i in range(rows-1):
-                for j in range(columns-1):
-                    if particle[i][j] == 1 and particle[i][j+1] == 1:
-                        #to not get the same ship_one
-                        if (i,j) in ship_one:
-                            continue
-                        while particle[i][j] == 1:
-                            ship_two.append((i,j))
-                            j += 1
-                            if j == 10:
-                                break
-                        found_ship = True
-                        break
-                    elif particle[i][j] == 1 and particle[i+1][j] == 1:
-                        #to not get the same ship_one
-                        if (i,j) in ship_one:
-                            continue
-                        while particle[i][j] == 1:
-                            ship_two.append((i,j))
-                            i += 1
-                            if i == 10:
-                                break
-                        found_ship = True
-                        break
-                if found_ship:
-                    break
-            print('ship one: ', ship_one)
-            print('ship two: ', ship_two)
+            print('deu certo')
+            
         elif transformation == 2:
             print()
         else:
