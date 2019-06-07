@@ -2,6 +2,7 @@ from random import choice
 from simulator import Simulator
 from tree import Tree
 import random
+import copy
 
 class POMCP:
     def __init__(self, Simulator=1, gamma=0.1, c=1, threshold=1, timeout=1, n_particles=1):
@@ -131,32 +132,152 @@ class POMCP:
         for ship in ships:
             print(ship)
         return ships
-    def apply_noise_to_state(self, particle):
+    def is_new_particle_valid(self, particle):
+        return True
+    def swap_location_transformation(self, particle_to_transform, ships, rows, columns):
+        while True:
+            particle = copy.copy(particle_to_transform)
+            indexes = random.sample(range(len(ships)), 2)
+            if len(ships[indexes[0]]) == len(ships[indexes[1]]):
+                continue
+            first_index_row_of_ship1 = ships[indexes[0]][0][0]
+            first_index_column_of_ship1 = ships[indexes[0]][0][1]
+            last_index_row_of_ship1 = ships[indexes[0]][len(ships[indexes[0]]) - 1][0]
+            last_index_column_of_ship1 = ships[indexes[0]][len(ships[indexes[0]]) - 1][1]
+            first_index_row_of_ship2 = ships[indexes[1]][0][0]
+            first_index_column_of_ship2 = ships[indexes[1]][0][1]
+            last_index_row_of_ship2 = ships[indexes[1]][len(ships[indexes[1]]) - 1][0]
+            last_index_column_of_ship2 = ships[indexes[1]][len(ships[indexes[1]]) - 1][1]
+            print('sorteados:' , indexes)
+            #Check if both are in a horizontal direction
+            if ships[indexes[0]][0][1] == ships[indexes[0]][1][1] - 1 and \
+                ships[indexes[1]][0][1] == ships[indexes[1]][1][1] - 1:
+                    #If first ship is bigger than the second
+                    if len(ships[indexes[0]]) > len(ships[indexes[1]]):
+                        dif = len(ships[indexes[0]]) - len(ships[indexes[1]])
+                        #Check if it can append the difference at the end of the second ship
+                        if last_index_column_of_ship2 + dif < columns:
+                            #Add at the end of second ship
+                            for i in range(dif):
+                                particle[last_index_row_of_ship2][last_index_column_of_ship2 + (i + 1)] = 1
+                            #Remove from the start of the first ship
+                            for i in range(dif):
+                                particle[first_index_row_of_ship1][first_index_column_of_ship1 + i] = 0
+                            #Check if transformation is valid
+                            if not self.is_new_particle_valid(particle):
+                                continue
+                        #Check if it can append the difference at the start of the second ship
+                        elif first_index_column_of_ship2 - dif >= 0:
+                            for i in range(dif):
+                                particle[first_index_row_of_ship2][first_index_column_of_ship2 - (i + 1)] = 1
+                            #Remove from the end of the first ship
+                            for i in range(dif):
+                                particle[first_index_row_of_ship1][last_index_column_of_ship1 - i] = 0
+                            #Check if transformation is valid
+                            if not self.is_new_particle_valid(particle):
+                                continue
+                        else:
+                            continue
+                    elif len(ships[indexes[0]]) < len(ships[indexes[1]]):
+                        dif = len(ships[indexes[1]]) - len(ships[indexes[0]])
+                        #Check if it can append the difference at the end of the first ship
+                        if last_index_column_of_ship1 + dif < columns:
+                            #Add at the end of second ship
+                            for i in range(dif):
+                                particle[last_index_row_of_ship1][last_index_column_of_ship1 + (i + 1)] = 1
+                            #Remove from the start of the second ship
+                            for i in range(dif):
+                                particle[first_index_row_of_ship2][first_index_column_of_ship2 + i] = 0
+                            #Check if transformation is valid
+                            if not self.is_new_particle_valid(particle):
+                                continue
+                        #Check if it can append the difference at the start of the first ship
+                        elif first_index_column_of_ship1 - dif >= 0:
+                            for i in range(dif):
+                                particle[first_index_row_of_ship1][first_index_column_of_ship1 - (i + 1)] = 1
+                            #Remove from the end of the second ship
+                            for i in range(dif):
+                                particle[first_index_row_of_ship2][last_index_column_of_ship2 - i] = 0
+                            #Check if transformation is valid
+                            if not self.is_new_particle_valid(particle):
+                                continue
+                        else:
+                            continue
+                    else:
+                        continue
+                    break
+            #Check if both are in a vertical direction
+            elif ships[indexes[0]][0][0] == ships[indexes[0]][1][0] - 1 and \
+                ships[indexes[1]][0][0] == ships[indexes[1]][1][0] - 1:
+                    #If first ship is bigger than the second
+                    if len(ships[indexes[0]]) > len(ships[indexes[1]]):
+                        dif = len(ships[indexes[0]]) - len(ships[indexes[1]])
+                        #Check if it can append the difference at the end of the second ship
+                        if last_index_row_of_ship2 + dif < rows:
+                            #Add at the end of second ship
+                            for i in range(dif):
+                                particle[last_index_row_of_ship2 + (i + 1)][last_index_column_of_ship2] = 1
+                            #Remove from the start of the first ship
+                            for i in range(dif):
+                                particle[first_index_row_of_ship1 + i][first_index_column_of_ship1] = 0
+                            #Check if transformation is valid
+                            if not self.is_new_particle_valid(particle):
+                                continue
+                        #Check if it can append the difference at the start of the second ship
+                        elif first_index_row_of_ship2 - dif >= 0:
+                            for i in range(dif):
+                                particle[first_index_row_of_ship2 - (i + 1)][first_index_column_of_ship2] = 1
+                            #Remove from the end of the first ship
+                            for i in range(dif):
+                                particle[first_index_row_of_ship1 - i][last_index_column_of_ship1] = 0
+                            #Check if transformation is valid
+                            if not self.is_new_particle_valid(particle):
+                                continue
+                        else:
+                            continue
+                    elif len(ships[indexes[0]]) < len(ships[indexes[1]]):
+                        dif = len(ships[indexes[1]]) - len(ships[indexes[0]])
+                        #Check if it can append the difference at the end of the first ship
+                        if last_index_row_of_ship1 + dif < rows:
+                            #Add at the end of second ship
+                            for i in range(dif):
+                                particle[last_index_row_of_ship1 + (i + 1)][last_index_column_of_ship1] = 1
+                            #Remove from the start of the second ship
+                            for i in range(dif):
+                                particle[first_index_row_of_ship2 + i][first_index_column_of_ship2] = 0
+                            #Check if transformation is valid
+                            if not self.is_new_particle_valid(particle):
+                                continue
+                        #Check if it can append the difference at the start of the first ship
+                        elif first_index_row_of_ship1 - dif >= 0:
+                            for i in range(dif):
+                                particle[first_index_row_of_ship1 - (i + 1)][first_index_column_of_ship1] = 1
+                            #Remove from the end of the second ship
+                            for i in range(dif):
+                                particle[first_index_row_of_ship2 - i][last_index_column_of_ship2] = 0
+                            #Check if transformation is valid
+                            if not self.is_new_particle_valid(particle):
+                                continue
+                        else:
+                            continue
+                    else:
+                        continue
+                    break
+            else:
+                continue
+        print('deu certo')
         print(particle)
-        rows, columns = particle.shape
-        ships = self.find_all_ships(particle)
+        return particle
+            
+    def apply_noise_to_state(self, particle_to_transform):
+        print(particle_to_transform)
+        rows, columns = particle_to_transform.shape
+        ships = self.find_all_ships(particle_to_transform)
         transformation = 1#choice([1,2,3])
         if transformation == 1:
             #Two ships of different sizes swap location
             #Choose two ships that have the same direction
-            ship_one = []
-            ship_two = []
-            while True:
-                indexes = random.sample(range(len(ships)), 2)
-                print('sorteados:' , indexes)
-                #Check if both are in a horizontal direction
-                if ships[indexes[0]][0][1] == ships[indexes[0]][1][1] - 1 and \
-                    ships[indexes[1]][0][1] == ships[indexes[1]][1][1] - 1:
-                        if len(ships[indexes[0]]) > len(ships[indexes[1]]):
-                            dif = len(ships[indexes[0]]) - len(ships[indexes[1]])
-                            if ships[indexes[1]][len(ships[indexes[1]]) - 1] + dif < 
-                        break
-                #Check if both are in a vertical direction
-                if ships[indexes[0]][0][0] == ships[indexes[0]][1][0] - 1 and \
-                    ships[indexes[1]][0][0] == ships[indexes[1]][1][0] - 1:
-                        break
-            print('deu certo')
-            
+            return self.swap_location_transformation(particle_to_transform, ships, rows, columns)
         elif transformation == 2:
             print()
         else:

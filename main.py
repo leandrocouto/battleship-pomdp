@@ -6,7 +6,7 @@ from random import choice
 
 battlefield = Grid()
 pomcp = POMCP()
-pomcp.apply_noise_to_state(battlefield.grid)
+a = pomcp.apply_noise_to_state(battlefield.grid)
 '''
 battlefield = Grid()
 print(battlefield.grid)
