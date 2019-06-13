@@ -1,6 +1,8 @@
 from random import choice
 from simulator import Simulator
 from tree import Tree
+from grid import Grid
+from ship import Ship
 import random
 import copy
 
@@ -129,14 +131,43 @@ class POMCP:
                             if k == 10:
                                 break
                         ships.append(ship)
-        for ship in ships:
-            print(ship)
         return ships
     def is_new_particle_valid(self, particle):
-        return True
+        battlefield = Grid()
+        battlefield.set_grid(particle)
+        ships = self.find_all_ships(particle)
+        list_of_Ships = []
+        for ship in ships:
+            aux_ship = Ship(-1, -1, -1, -1)
+            aux_ship.ndarray_to_ship(ship)
+            list_of_Ships.append(aux_ship)
+        is_particle_valid = True
+        for ship in list_of_Ships:
+            if ship.direction == 1:
+                for i in range(ship.y, ship.y + ship.length):
+                    battlefield.grid[ship.x][i] = 0
+            else:
+                for i in range(ship.x, ship.x + ship.length):
+                    battlefield.grid[i][ship.y] = 0
+            if not battlefield.is_ship_valid(ship):
+                is_particle_valid = False
+                if ship.direction == 1:
+                    for i in range(ship.y, ship.y + ship.length):
+                        battlefield.grid[ship.x][i] = 1
+                else:
+                    for i in range(ship.x, ship.x + ship.length):
+                        battlefield.grid[i][ship.y] = 1
+                break
+            if ship.direction == 1:
+                for i in range(ship.y, ship.y + ship.length):
+                    battlefield.grid[ship.x][i] = 1
+            else:
+                for i in range(ship.x, ship.x + ship.length):
+                    battlefield.grid[i][ship.y] = 1
+        return is_particle_valid
     def swap_location_transformation(self, particle_to_transform, ships, rows, columns):
         while True:
-            particle = copy.copy(particle_to_transform)
+            particle = copy.deepcopy(particle_to_transform)
             indexes = random.sample(range(len(ships)), 2)
             if len(ships[indexes[0]]) == len(ships[indexes[1]]):
                 continue
@@ -148,7 +179,6 @@ class POMCP:
             first_index_column_of_ship2 = ships[indexes[1]][0][1]
             last_index_row_of_ship2 = ships[indexes[1]][len(ships[indexes[1]]) - 1][0]
             last_index_column_of_ship2 = ships[indexes[1]][len(ships[indexes[1]]) - 1][1]
-            print('sorteados:' , indexes)
             #Check if both are in a horizontal direction
             if ships[indexes[0]][0][1] == ships[indexes[0]][1][1] - 1 and \
                 ships[indexes[1]][0][1] == ships[indexes[1]][1][1] - 1:
@@ -265,12 +295,11 @@ class POMCP:
                     break
             else:
                 continue
-        print('deu certo')
-        print(particle)
         return particle
             
     def apply_noise_to_state(self, particle_to_transform):
-        print(particle_to_transform)
+        #print('PARTICLE TO TRANSFORM')
+        #print(particle_to_transform)
         rows, columns = particle_to_transform.shape
         ships = self.find_all_ships(particle_to_transform)
         transformation = 1#choice([1,2,3])

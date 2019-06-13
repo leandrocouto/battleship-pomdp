@@ -2,6 +2,7 @@ from ship import Ship
 
 import numpy as np
 import random
+import copy
 
 class Grid:
     def __init__(self, rows = 10, columns = 10, n_ships = 4):
@@ -10,6 +11,8 @@ class Grid:
         self.n_ships = n_ships
         self.grid = np.zeros((rows, columns))
         self.create_grid()
+    def set_grid(self, new_grid):
+        self.grid = copy.deepcopy(new_grid)
     def create_grid(self):
         ships = []
         ship_length = 2
