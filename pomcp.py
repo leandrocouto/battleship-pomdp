@@ -17,35 +17,63 @@ class POMCP:
         self.timeout = timeout
         self.n_particles = n_particles
         self.tree = Tree()
-    def simulate(self):
-        print()
-    def rollout(self, s, depth):
+    def simulate(self, s, h, depth):
         # Check significance of update
         if (self.gamma**depth < self.e or self.gamma == 0 ) and depth != 0:
             return 0
         
+        # If it is a leaf node
+        if self.tree.is_leaf_node(h):
+            for action in h.valid_actions():
+                self.tree.ExpandTreeFrom(h, action, IsAction=True)
+            reward_from_rollout = self.rollout(s,depth)
+            self.tree.nodes[h].n_visits += 1
+            self.tree.nodes[h].value = reward_from_rollout
+            return reward_from_rollout
+        
         total_reward = 0
+        # Get best action and node (with applied action - "ha") given h
+        a, ha = self.search_best_action(h)
         
-        # Pick random action; maybe change this later
-        # Need to also add observation in history if this is changed
-        action = choice(self.actions)
+        sample_state, sample_observation, reward = self.Simulator(s, a)
+        # Get "hao" node
+        hao = self.tree.get_observation_node(ha, sample_observation)
+        # Estimate node Value
+        total_reward += reward + self.gamma*self.simulate(sample_state, hao, depth + 1)
         
-        # Generate states and observations
-        successor_state, _, reward = self.Simulator(s,action)
-        total_reward += reward + self.gamma*self.Rollout(successor_state, depth + 1)
+        self.tree.nodes[h].particle_list.append(s)
+        #Just in case adding the new state in the particles list reaches the total 
+        #number of particles set previously
+        if len(self.tree.nodes[h].particle_list) > self.no_particles:
+            self.tree.nodes[h].particle_list = self.tree.nodes[h].particle_list[1:]
+        self.tree.nodes[h].n_visits += 1
+        self.tree.nodes[ha].n_visits += 1
+        self.tree.nodes[ha].value += (total_reward - self.tree.nodes[ha].value)/self.tree.nodes[ha].n_visits
         return total_reward
+        
+    def rollout(self, s, depth):
+        # Check significance of update
+        if (self.gamma**depth < self.e or self.gamma == 0 ) and depth != 0:
+            return 0
+            
+        # Uniform random rollout policy
+        action = choice(s.valid_actions())
+        
+        # Generate states and observations from the simulator
+        successor_state, observation, reward = self.Simulator(s,action)
+        return reward + self.gamma*self.rollout(successor_state, depth + 1)
     def search(self):
         particles = self.tree.nodes[-1].particle_list.copy()
         #Loop until timeout
         for _ in range(self.timeout):
             if len(particles) == 0:
-                state = choice(self.states)
+                state = choice(sample_random_particles())
             else:
                 state = choice(particles)
             self.simulate(state, -1, 0)
-        best_action, _ = self.search_best(-1)
+        best_action, _ = self.search_best_action(-1)
         return best_action
-    def search_best(self, h):
+    def search_best_action(self, h):
         max_value = None
         result = None
         resulta = None
@@ -67,9 +95,9 @@ class POMCP:
                     resulta = action
         #return action-child_id values
         return resulta, result
-    def sample_random_particles(self, k):
+    def sample_random_particles(self):
         particles = []
-        for _ in range(k): 
+        for _ in range(self.n_particles): 
             battlefield = Grid()
             particles.append(battlefield.grid)
         return particles
@@ -136,6 +164,8 @@ class POMCP:
         battlefield = Grid()
         battlefield.set_grid(particle)
         ships = self.find_all_ships(particle)
+        if len(ships) < 4:
+            return False
         list_of_Ships = []
         for ship in ships:
             aux_ship = Ship(-1, -1, -1, -1)
@@ -296,19 +326,54 @@ class POMCP:
             else:
                 continue
         return particle
-            
+    def move_ship_position(self, particle_to_transform, ships, rows, columns):
+        particle = copy.deepcopy(particle_to_transform)
+        number_of_ships_moved = choice([1,2])
+        indexes_of_ships_to_be_changed = list(range(0, number_of_ships_moved))
+        random.shuffle(indexes_of_ships_to_be_changed)
+        for i in range(number_of_ships_moved):
+            ship_selected = Ship(-1, -1, -1, -1)
+            ship_selected.ndarray_to_ship(ships[indexes_of_ships_to_be_changed[i]])
+            #First delete it from the grid
+            for i in range(ship_selected.length):
+                if ship_selected.direction == 1: #right
+                    particle[ship_selected.x][ship_selected.y + i] = 0
+                elif ship_selected.direction == 2: #down
+                    particle[ship_selected.x + i][ship_selected.y] = 0
+            #Randomize a new position and then check if it is a valid one
+            while True:
+                new_ship = Ship(random.randrange(rows), random.randrange(columns),
+                        random.randint(1,2), ship_selected.length)
+                #if the ship won't fit
+                if new_ship.direction == 1:
+                    if new_ship.length > (columns - new_ship.y):
+                        continue
+                if new_ship.direction == 2:
+                    if new_ship.length > (rows - new_ship.x):
+                        continue
+                temp_particle = copy.deepcopy(particle)
+                for i in range(new_ship.length):
+                    if new_ship.direction == 1: #right
+                        temp_particle[new_ship.x][new_ship.y + i] = 1
+                    elif new_ship.direction == 2: #down
+                        temp_particle[new_ship.x + i][new_ship.y] = 1
+                if self.is_new_particle_valid(temp_particle):
+                    particle = copy.deepcopy(temp_particle)
+                    break
+        return particle
     def apply_noise_to_state(self, particle_to_transform):
-        #print('PARTICLE TO TRANSFORM')
-        #print(particle_to_transform)
+        print('PARTICLE TO TRANSFORM')
+        print(particle_to_transform)
         rows, columns = particle_to_transform.shape
         ships = self.find_all_ships(particle_to_transform)
-        transformation = 1#choice([1,2,3])
+        transformation = 2#choice([1,2,3])
         if transformation == 1:
             #Two ships of different sizes swap location
             #Choose two ships that have the same direction
             return self.swap_location_transformation(particle_to_transform, ships, rows, columns)
         elif transformation == 2:
-            print()
+            #1 or 2 ships are moved to a new location
+            return self.move_ship_position(particle_to_transform, ships, rows, columns)
         else:
             print()
 

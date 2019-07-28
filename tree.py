@@ -25,13 +25,14 @@ class Tree:
             self.nodes[self.count] = node
             # inform parent node
             self.nodes[parent_key].children[index] = self.count
-    def get_node_after_observation(self, node_after_action, observation):
-    	# Check if a given observation node has been visited
-        if observation not in list(self.nodes[node_after_action].children.keys()):
+    def get_observation_node(self, ha, sample_observation):
+        # Check if a given observation node has been visited
+        if sample_observation not in list(self.nodes[ha].children.keys()):
             # If not create the node
-            self.expand(node_after_action, observation)
+            self.expand(ha, sample_observation)
         # Get the nodes index
-        return self.nodes[node_after_action].children[observation]
+        hao = self.nodes[ha].children[sample_observation]
+        return hao
     def prune(self, node_key):
         children = self.nodes[node_key].children
         self.nodes.pop(node_key)
@@ -43,7 +44,7 @@ class Tree:
         node_after_action = self.nodes[-1].children[action]
 
         # Get the node after the observation (which will be the new root)
-        new_root = self.get_node_after_observation(node_after_action, observation)
+        new_root = self.get_observation_node(node_after_action, observation)
 
         # remove new_root from parent's children to avoid deletion
         del self.nodes[node_after_action].children[observation]

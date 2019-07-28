@@ -67,7 +67,7 @@ class Grid:
         elif ship.direction == 1:
             #if the ship won't fit
             if ship.length > (self.columns - ship.y):
-                    return False
+                return False
             else:
                 #Check for ships in the neighborhood
                 for i in range(ship.y, ship.y+ship.length):
