@@ -68,3 +68,11 @@ class Tree:
             return False
     def calculate_UCB(self, parent_n_visits, current_n_visits, current_value, c):
         return current_value + c*np.sqrt(np.log(parent_n_visits)/current_n_visits)
+    def print_tree(self, index):
+        print('Node do index', index)
+        print('Printando children do index', index, 'tamanho do children: ', len(self.nodes[index].children))
+        for key, value in self.nodes[index].children.items():
+            print('key: ', key)
+            self.print_tree(value)
+        print('Fim dos filhos do index', index)
+        print()

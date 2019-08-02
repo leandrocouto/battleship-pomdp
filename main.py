@@ -3,7 +3,7 @@ from grid import Grid
 from tree import Tree
 from pomcp import POMCP
 from random import choice
-
+'''
 battlefield = Grid()
 #print(battlefield.grid)
 pomcp = POMCP()
@@ -11,30 +11,43 @@ a = pomcp.apply_noise_to_state(battlefield.grid)
 print('APÓS NOISE')
 print(a)
 '''
+
 battlefield = Grid()
 print(battlefield.grid)
+action0 = choice(battlefield.valid_actions())
 action1 = choice(battlefield.valid_actions())
 action2 = choice(battlefield.valid_actions())
 action3 = choice(battlefield.valid_actions())
 action4 = choice(battlefield.valid_actions())
 action5 = choice(battlefield.valid_actions())
-print(action1, action2, action3, action4, action5)
+action6 = choice(battlefield.valid_actions())
+action7 = choice(battlefield.valid_actions())
+print(action0, action1, action2, action3, action4, action5, action6, action7)
 tree = Tree()
 #root (-1) has three children
+tree.expand(-1, action0)
 tree.expand(-1, action1)
 tree.expand(-1, action2)
-tree.expand(-1, action3)
 #one of the children has two children
+tree.expand(1, action3)
 tree.expand(1, action4)
-tree.expand(1, action5)
+tree.expand(3, action5)
+tree.expand(5, action6)
+tree.expand(5, action7)
+tree.print_tree(-1)
+print('\n\n\n PRINTANDO PRUNADO \n\n\n')
+tree.prune_and_make_new_root(action1,action3) #root will be 3
+tree.print_tree(-1)
+
 #
-#
-#     |------ 0
-#     |                |---- 3
-#    -1------ 1 -------
+#                                             
+#     |------ 0                               |--- 6
+#     |                |---- 3 ------ 5 -----|
+#    -1------ 1 -------                      |--- 7
 #     |                |---- 4
 #     |------ 2
 #
+'''
 tree.prune_and_make_new_root(action2,action4)
 
 for i in range(-1, 5):
