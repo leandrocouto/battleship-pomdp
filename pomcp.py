@@ -3,29 +3,32 @@ from simulator import Simulator
 from tree import Tree
 from grid import Grid
 from ship import Ship
+from utils import valid_actions
 import random
 import copy
 
 class POMCP:
-    def __init__(self, Simulator=1, gamma=0.1, c=1, threshold=1, timeout=1, n_particles=1):
+    def __init__(self, simulator, gamma, c, threshold, timeout, n_particles):
         self.gamma = gamma
         if gamma >= 1:
             raise ValueError('Gamma value should be less than 1.')
-        self.Simulator = Simulator
+        self.simulator = simulator
         self.threshold = threshold
         self.c = c
         self.timeout = timeout
         self.n_particles = n_particles
-        self.tree = Tree()
+        self.tree = Tree(simulator.start_state)
+        self.history = History()
     def simulate(self, s, h, depth):
         # Check significance of update
-        if (self.gamma**depth < self.e or self.gamma == 0 ) and depth != 0:
+        if (self.gamma**depth < self.threshold or self.gamma == 0 ) and depth != 0:
             return 0
         
         # If it is a leaf node
-        if self.tree.is_leaf_node(h):
-            for action in h.valid_actions():
-                self.tree.ExpandTreeFrom(h, action, IsAction=True)
+        if self.tree.is_leaf_node(self.tree.nodes[h]):
+            for action in valid_actions(self.tree.nodes[h]):
+                print(action)
+                self.tree.expand(h, action, IsAction=True)
             reward_from_rollout = self.rollout(s,depth)
             self.tree.nodes[h].n_visits += 1
             self.tree.nodes[h].value = reward_from_rollout
@@ -35,7 +38,7 @@ class POMCP:
         # Get best action and node (with applied action - "ha") given h
         a, ha = self.search_best_action(h)
         
-        sample_state, sample_observation, reward = self.Simulator(s, a)
+        sample_state, sample_observation, reward, is_terminal = self.simulator.step(s, a)
         # Get "hao" node
         hao = self.tree.get_observation_node(ha, sample_observation)
         # Estimate node Value
@@ -67,7 +70,7 @@ class POMCP:
         #Loop until timeout
         for _ in range(self.timeout):
             if len(particles) == 0:
-                state = choice(sample_random_particles())
+                state = choice(self.sample_random_particles())
             else:
                 state = choice(particles)
             self.simulate(state, -1, 0)
