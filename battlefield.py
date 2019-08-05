@@ -4,7 +4,7 @@ import numpy as np
 import random
 import copy
 
-class Grid:
+class Battlefield:
     def __init__(self, rows = 10, columns = 10, n_ships = 4):
         self.rows = rows
         self.columns = columns

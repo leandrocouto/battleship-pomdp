@@ -1,18 +1,35 @@
 from ship import Ship
-from grid import Grid
+from battlefield import Battlefield
+from history import History
 from tree import Tree
 from pomcp import POMCP
 from random import choice
 from simulator import Simulator
-
+'''
 simulator = Simulator()
-pomcp = POMCP(simulator, 0.95, 1, 0.005, 10000, 1000)
-time = 0
-while time < 100:
-    time += 1
-    action = pomcp.search()
-    print(action)
-    pomcp.tree.prune_after_action(action,observation)
+print(simulator.start_state.grid)
+h = History()
+for _ in range(500):
+	h.add(choice(simulator.start_state.valid_actions()), 0)
+h.print_history()
+last_state, legal_actions = simulator.get_last_state_and_legal_actions(h)
+print(last_state.grid)
+print(legal_actions)
+'''
+simulator = Simulator()
+print('inicio')
+print(simulator.start_state.grid)
+print()
+pomcp = POMCP(simulator, 1, 1, 0.005, 10000, 1000)
+reward = pomcp.rollout(simulator.start_state,1)
+print('Reward: ', reward)
+#time = 0
+#while time < 100:
+#    time += 1
+#    action = pomcp.search()
+#    print(action)
+#    pomcp.tree.prune_after_action(action,observation)
+
 '''
 battlefield = Grid()
 #print(battlefield.grid)
@@ -21,6 +38,7 @@ a = pomcp.apply_noise_to_state(battlefield.grid)
 print('APÓS NOISE')
 print(a)
 '''
+
 '''
 battlefield = Grid()
 print(battlefield.grid)
@@ -49,6 +67,7 @@ print('\n\n\n PRINTANDO PRUNADO \n\n\n')
 tree.prune_and_make_new_root(action1,action3) #root will be 3
 tree.print_tree(-1)
 '''
+
 #
 #                                             
 #     |------ 0                               |--- 6
@@ -57,6 +76,7 @@ tree.print_tree(-1)
 #     |                |---- 4
 #     |------ 2
 #
+
 '''
 tree.prune_and_make_new_root(action2,action4)
 

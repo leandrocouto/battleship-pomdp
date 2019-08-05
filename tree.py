@@ -3,14 +3,13 @@ import numpy as np
 import copy
 
 class Tree:
-    def __init__(self, ,root_state):
+    def __init__(self):
         #Used as index for 'nodes' (dictionary)
         self.count = -1
         self.nodes = {}
         #Key is the 'count' (it will be unique because the count can only grow)
         #Value is the node itself
         self.nodes[self.count] = Node(-1, {}, 0, 0, []) #root is initially empty
-        self.root_state = root_state
     def expand(self, parent_key, index, IsActionNode = False):
         #index = index of action/observation (in the children dictionary)
         self.count += 1
