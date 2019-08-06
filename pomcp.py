@@ -25,7 +25,7 @@ class POMCP:
         #Loop until timeout
         for _ in range(self.timeout):
             if len(particles) == 0:
-                state = choice(sample_random_particles(n_particles))
+                state = choice(sample_random_particles(self.n_particles))
             else:
                 state = choice(particles)
             self.simulate(state, -1, 0)
@@ -35,10 +35,10 @@ class POMCP:
         # Check significance of update
         if self.gamma**depth < self.epsilon:
             return 0
-        
+        last_state, legal_actions = self.simulator.get_last_state_and_legal_actions(h)
         # If it is a leaf node
         if self.tree.is_leaf_node(self.tree.nodes[h]):
-            for action in valid_actions(self.tree.nodes[h]):
+            for action in legal_actions:
                 self.tree.expand(h, action, IsAction=True)
             reward_from_rollout = self.rollout(s,depth)
             self.tree.nodes[h].n_visits += 1

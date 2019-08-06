@@ -1,30 +1,51 @@
 from node import Node
+from history import Entry, History
 import numpy as np
 import copy
 
 class Tree:
     def __init__(self):
-        #Used as index for 'nodes' (dictionary)
-        self.count = -1
         self.nodes = {}
-        #Key is the 'count' (it will be unique because the count can only grow)
-        #Value is the node itself
-        self.nodes[self.count] = Node(-1, {}, 0, 0, []) #root is initially empty
-    def expand(self, parent_key, index, IsActionNode = False):
-        #index = index of action/observation (in the children dictionary)
-        self.count += 1
-        if IsActionNode: 
-            node = Node(parent_key, {}, 0, 0, -1) #particle list are based on observations only
-            # add node to tree
-            self.nodes[self.count] = node 
-            # inform parent node
-            self.nodes[parent_key].children[index] = self.count 
+        #Key of the dictionary is the history
+        #In particular, the root has key and parent -1
+        self.nodes[-1] = Node(-1, History(), {}, 0, 0, [], True)
+    def expand(self, parent_history, action_or_observation, IsActionNode = False):
+        print('printando meu dicionario')
+        for key, value in self.nodes.items():
+            print('Chave: ', key,' Valor: ', value)
+        #Expanding from the root (special case)
+        if parent_history == -1:
+            if IsActionNode:
+                new_history = History()
+                new_history.add_only_action(action_or_observation)
+                node = Node(-1, new_history, {}, 0, 0, -1, False) #particle list are based on observations only
+                # add node to tree
+                self.nodes[new_history] = node 
+                # inform parent node
+                self.nodes[parent_history].children[action_or_observation] = new_history
+            else:
+                new_history = History()
+                new_history.add_only_observation(action_or_observation)
+                node = Node(-1, new_history, {}, 0, 0, [], False)
+                # add node to tree
+                self.nodes[new_history] = node
+                # inform parent node
+                self.nodes[parent_history].children[action_or_observation] = new_history
         else:
-            node = Node(parent_key, {}, 0, 0, [])
-            # add node to tree
-            self.nodes[self.count] = node
-            # inform parent node
-            self.nodes[parent_key].children[index] = self.count
+            if IsActionNode:
+                new_history = parent_history.add_only_action(action_or_observation)
+                node = Node(parent_history, new_history, {}, 0, 0, -1, False) #particle list are based on observations only
+                # add node to tree
+                self.nodes[new_history] = node 
+                # inform parent node
+                self.nodes[parent_history].children[action_or_observation] = new_history
+            else:
+                new_history = parent_history.add_only_observation(action_or_observation)
+                node = Node(parent_history, new_history, {}, 0, 0, [], False)
+                # add node to tree
+                self.nodes[new_history] = node
+                # inform parent node
+                self.nodes[parent_history].children[action_or_observation] = new_history
     def get_observation_node(self, ha, sample_observation):
         # Check if a given observation node has been visited
         if sample_observation not in list(self.nodes[ha].children.keys()):
@@ -41,13 +62,13 @@ class Tree:
     
     def prune_and_make_new_root(self, action, observation):
         # Get the node after action
-        node_after_action = self.nodes[-1].children[action]
+        ha = self.nodes[-1].children[action]
 
         # Get the node after the observation (which will be the new root)
-        new_root = self.get_observation_node(node_after_action, observation)
+        new_root = self.get_observation_node(ha, observation)
 
         # remove new_root from parent's children to avoid deletion
-        del self.nodes[node_after_action].children[observation]
+        del self.nodes[ha].children[observation]
 
         # delete all new_root's "brothers"
         self.prune(-1)
@@ -57,10 +78,10 @@ class Tree:
     def update_root(self, new_root):
         self.nodes[-1] = copy.copy(self.nodes[new_root])
         del self.nodes[new_root]
-        self.nodes[-1].parent_key = -1
+        self.nodes[-1].parent = -1
         # update children
         for _ , child in self.nodes[-1].children.items():
-            self.nodes[child].parent_key = -1
+            self.nodes[child].parent = -1
     def is_leaf_node(self, node):
         if len(node.children) == 0:
             return True

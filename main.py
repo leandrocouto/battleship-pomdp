@@ -5,6 +5,7 @@ from tree import Tree
 from pomcp import POMCP
 from random import choice
 from simulator import Simulator
+import copy
 '''
 simulator = Simulator()
 print(simulator.start_state.grid)
@@ -16,20 +17,20 @@ last_state, legal_actions = simulator.get_last_state_and_legal_actions(h)
 print(last_state.grid)
 print(legal_actions)
 '''
+'''
 simulator = Simulator()
 print('inicio')
 print(simulator.start_state.grid)
 print()
 pomcp = POMCP(simulator, 1, 1, 0.005, 10000, 1000)
-reward = pomcp.rollout(simulator.start_state,1)
-print('Reward: ', reward)
-#time = 0
-#while time < 100:
-#    time += 1
-#    action = pomcp.search()
-#    print(action)
-#    pomcp.tree.prune_after_action(action,observation)
-
+time = 0
+while time < 100:
+    time += 1
+    action = pomcp.search()
+    print(action)
+    observation = pomcp.history.history_list[-1].observation
+    pomcp.tree.prune_after_action(action,observation)
+'''
 '''
 battlefield = Grid()
 #print(battlefield.grid)
@@ -38,39 +39,14 @@ a = pomcp.apply_noise_to_state(battlefield.grid)
 print('APÓS NOISE')
 print(a)
 '''
+#print('\n\n\n PRINTANDO PRUNADO \n\n\n')
+#tree.prune_and_make_new_root(action1,action3) #root will be 3
+#tree.print_tree(-1)
 
-'''
-battlefield = Grid()
-print(battlefield.grid)
-action0 = choice(battlefield.valid_actions())
-action1 = choice(battlefield.valid_actions())
-action2 = choice(battlefield.valid_actions())
-action3 = choice(battlefield.valid_actions())
-action4 = choice(battlefield.valid_actions())
-action5 = choice(battlefield.valid_actions())
-action6 = choice(battlefield.valid_actions())
-action7 = choice(battlefield.valid_actions())
-print(action0, action1, action2, action3, action4, action5, action6, action7)
-tree = Tree()
-#root (-1) has three children
-tree.expand(-1, action0)
-tree.expand(-1, action1)
-tree.expand(-1, action2)
-#one of the children has two children
-tree.expand(1, action3)
-tree.expand(1, action4)
-tree.expand(3, action5)
-tree.expand(5, action6)
-tree.expand(5, action7)
-tree.print_tree(-1)
-print('\n\n\n PRINTANDO PRUNADO \n\n\n')
-tree.prune_and_make_new_root(action1,action3) #root will be 3
-tree.print_tree(-1)
-'''
 
-#
+#         a           o           a          o
 #                                             
-#     |------ 0                               |--- 6
+#     |------ 0                              |--- 6
 #     |                |---- 3 ------ 5 -----|
 #    -1------ 1 -------                      |--- 7
 #     |                |---- 4
