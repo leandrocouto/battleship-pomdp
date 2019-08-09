@@ -4,7 +4,7 @@ from tree import Tree
 from battlefield import Battlefield
 from history import History
 from ship import Ship
-from utils import valid_actions, sample_random_particles, particle_list_update
+from utils import sample_random_particles
 import random
 import copy
 
@@ -17,18 +17,21 @@ class POMCP:
         self.timeout = timeout
         self.n_particles = n_particles
         self.tree = Tree()
-        self.history = History()
-    def search(self):
-        #Always start the search from the current root 
-        #i.e.: the tail of the current history
-        particles = self.tree.nodes[-1].particle_list.copy()
+    def search(self, h):
+        #Special case: first call, the current history is non-existent
+        if len(h.history_list) == 0:
+            particles = []
+        else:
+            particles = self.tree.nodes[h].particle_list.copy()
         #Loop until timeout
-        for _ in range(self.timeout):
+        for i in range(self.timeout):
+            if i%10 == 0:
+                print(i)
             if len(particles) == 0:
                 state = choice(sample_random_particles(self.n_particles))
             else:
                 state = choice(particles)
-            self.simulate(state, -1, 0)
+            self.simulate(state, h, 0)
         best_action, _ = self.search_best_action(-1)
         return best_action
     def simulate(self, s, h, depth):
@@ -37,12 +40,17 @@ class POMCP:
             return 0
         last_state, legal_actions = self.simulator.get_last_state_and_legal_actions(h)
         # If it is a leaf node
-        if self.tree.is_leaf_node(self.tree.nodes[h]):
+        if self.tree.is_leaf_node(h):
             for action in legal_actions:
-                self.tree.expand(h, action, IsAction=True)
+                self.tree.expand(h, action, isAction=True)
             reward_from_rollout = self.rollout(s,depth)
-            self.tree.nodes[h].n_visits += 1
-            self.tree.nodes[h].value = reward_from_rollout
+            #print('Reward from rollout:', reward_from_rollout)
+            if len(h.history_list) == 0:
+                self.tree.nodes[-1].n_visits += 1
+                self.tree.nodes[-1].value = reward_from_rollout
+            else:
+                self.tree.nodes[h].n_visits += 1
+                self.tree.nodes[h].value = reward_from_rollout
             return reward_from_rollout
         
         total_reward = 0
@@ -58,7 +66,7 @@ class POMCP:
         self.tree.nodes[h].particle_list.append(s)
         #Just in case adding the new state in the particles list reaches the total 
         #number of particles set previously
-        if len(self.tree.nodes[h].particle_list) > self.no_particles:
+        if len(self.tree.nodes[h].particle_list) > self.n_particles:
             self.tree.nodes[h].particle_list = self.tree.nodes[h].particle_list[1:]
         self.tree.nodes[h].n_visits += 1
         self.tree.nodes[ha].n_visits += 1
@@ -76,8 +84,6 @@ class POMCP:
         # Generate states and observations from the simulator
         successor_state, observation, reward, is_terminal = self.simulator.step(s,action)
         if is_terminal:
-            print('terminal state')
-            print(successor_state.grid)
             return reward
         return reward + self.gamma*self.rollout(successor_state, depth + 1)
     def search_best_action(self, h):
@@ -92,9 +98,9 @@ class POMCP:
                 # if node is unvisited return it
                 if self.tree.nodes[child].n_visits == 0:
                     return action, child
-                ucb = UCB(self.tree.nodes[h].n_visits, self.tree.nodes[child].n_visits, 
+                ucb = self.tree.calculate_UCB(self.tree.nodes[h].n_visits, self.tree.nodes[child].n_visits, 
                 self.tree.nodes[child].value, self.c)
-        
+                #print('action: ', action, 'children len: ', len(children), 'Valor ucb: ', ucb)
                 if max_value is None or max_value < ucb:
                     max_value = ucb
                     ha = child

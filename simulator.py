@@ -17,8 +17,12 @@ class Simulator:
         return successor_state, observation, reward, is_terminal
     def get_last_state_and_legal_actions(self, h):
         last_state = copy.deepcopy(self.start_state)
-        for entry in h.history_list:
-            last_state.apply_action(entry.action)
-        return last_state, last_state.valid_actions()
+        #Special case - root
+        if len(h.history_list) == 0:
+            return self.start_state, self.start_state.valid_actions()
+        else:   
+            for entry in h.history_list:
+                last_state.apply_action(entry.action)
+            return last_state, last_state.valid_actions()
 
         
