@@ -15,14 +15,17 @@ class Simulator:
             reward = 99 #Won the game (100 per victory/-1 per time step)
             is_terminal = True
         return successor_state, observation, reward, is_terminal
-    def get_last_state_and_legal_actions(self, h):
-        last_state = copy.deepcopy(self.start_state)
+    def get_legal_actions_given_history(self, h):
+        dummy_state = Battlefield()
+        dummy_state.initialize_empty_grid()
         #Special case - root
-        if len(h.history_list) == 0:
-            return self.start_state, self.start_state.valid_actions()
+        if h == -1:
+            return dummy_state.valid_actions()
         else:   
             for entry in h.history_list:
-                last_state.apply_action(entry.action)
-            return last_state, last_state.valid_actions()
+                dummy_state.apply_action(entry.action)
+            return dummy_state.valid_actions()
+    def get_legal_actions_given_state(self, state): 
+        return state.valid_actions()
 
         

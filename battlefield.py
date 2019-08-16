@@ -30,6 +30,8 @@ class Battlefield:
                     ship.generate_random_ship(self.rows, self.columns, ship.length)
                     valid_ship = self.is_ship_valid(ship)
                 self.place_ship(ship)
+    def initialize_empty_grid(self):
+        self.grid = np.zeros((self.rows, self.columns))
     #Assume ship is already valid
     def place_ship(self,ship):
         for i in range(ship.length):

@@ -31,7 +31,13 @@ class History:
     def __hash__(self):
         return hash(repr(self))
     def __eq__(self, other):
-        for i in range(len(self.history_list)):
-            if self.history_list[i] != other.history_list[i]:
+        if other == -1:
+            if len(self.history_list) == 0:
+                 return True
+            else:
                 return False
-        return True
+        else:
+            for i in range(len(self.history_list)):
+                if self.history_list[i] != other.history_list[i]:
+                    return False
+            return True

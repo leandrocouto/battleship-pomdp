@@ -59,7 +59,7 @@ def sample_random_particles(n_particles):
             particles.append(battlefield)
         return particles
 
-def particle_list_update(simulator, old_particle_list, real_action, real_observation):
+def particle_list_update(simulator, old_particle_list, history, real_action, real_observation):
         updated_particle_list = []
         particles_needing_noise = []
         for _ in range(len(old_particle_list)):
@@ -72,7 +72,7 @@ def particle_list_update(simulator, old_particle_list, real_action, real_observa
         #if there are not enough particles, then we need particle reinvigoration
         lack_of_particles = len(old_particle_list) - len(updated_particle_list)
         while lack_of_particles != 0:
-            noised_belief_state = apply_noise_to_state(choice(particles_needing_noise))
+            noised_belief_state = apply_noise_to_state(choice(particles_needing_noise), history)
             _, observation_from_sample, _, _ = simulator.step(noised_belief_state, real_action)
             if real_observation == observation_from_sample:
                 updated_particle_list.append(noised_belief_state)
@@ -282,7 +282,7 @@ def move_ship_position(particle_to_transform, ships):
                 break
     return particle
 
-def apply_noise_to_state(particle_to_transform):
+def apply_noise_to_state(particle_to_transform, history):
     ships = find_all_ships(particle_to_transform)
     transformation = choice([1,2])
     if transformation == 1:

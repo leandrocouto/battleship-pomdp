@@ -17,75 +17,75 @@ class POMCP:
         self.timeout = timeout
         self.n_particles = n_particles
         self.tree = Tree()
+        self.flag_for_first_tree_expansion = False
     def search(self, h):
-        #Special case: first call, the current history is non-existent
+        #Special case: first call, the current history is empty
         if len(h.history_list) == 0:
-            particles = []
-        else:
-            particles = self.tree.nodes[h].particle_list.copy()
+            self.tree.nodes[self.tree.root_key].particle_list = sample_random_particles(self.n_particles)
         #Loop until timeout
         for i in range(self.timeout):
             if i%10 == 0:
                 print(i)
-            if len(particles) == 0:
-                state = choice(sample_random_particles(self.n_particles))
-            else:
-                state = choice(particles)
+            state = choice(self.tree.nodes[self.tree.root_key].particle_list)
             self.simulate(state, h, 0)
-        best_action, _ = self.search_best_action(-1)
+        best_action, _ = self.search_best_action(self.tree.root_key)
         return best_action
     def simulate(self, s, h, depth):
+        if len(h.history_list) == 0:
+            h = -1
         # Check significance of update
         if self.gamma**depth < self.epsilon:
             return 0
-        last_state, legal_actions = self.simulator.get_last_state_and_legal_actions(h)
-        # If it is a leaf node
-        if self.tree.is_leaf_node(h):
+        legal_actions = self.simulator.get_legal_actions_given_history(h)
+        if self.flag_for_first_tree_expansion == False or self.tree.is_history_in_tree(h):
             for action in legal_actions:
                 self.tree.expand(h, action, isAction=True)
-            reward_from_rollout = self.rollout(s,depth)
-            #print('Reward from rollout:', reward_from_rollout)
-            if len(h.history_list) == 0:
-                self.tree.nodes[-1].n_visits += 1
-                self.tree.nodes[-1].value = reward_from_rollout
-            else:
-                self.tree.nodes[h].n_visits += 1
-                self.tree.nodes[h].value = reward_from_rollout
+            self.flag_for_first_tree_expansion = True
+            h_for_rollout = copy.deepcopy(h)
+            reward_from_rollout = self.rollout(s, h_for_rollout, self.simulator, depth)
+            self.tree.nodes[h].n_visits += 1
+            self.tree.nodes[h].value = reward_from_rollout
             return reward_from_rollout
         
         total_reward = 0
         # Get best action and node (with applied action - "ha") given h
         a, ha = self.search_best_action(h)
-        
         sample_state, sample_observation, reward, is_terminal = self.simulator.step(s, a)
         # Get "hao" node
-        hao = self.tree.get_observation_node(ha, sample_observation)
+        hao = self.tree.get_hao(ha, sample_observation)
         # Estimate node Value
         total_reward += reward + self.gamma*self.simulate(sample_state, hao, depth + 1)
-        
         self.tree.nodes[h].particle_list.append(s)
         #Just in case adding the new state in the particles list reaches the total 
         #number of particles set previously
         if len(self.tree.nodes[h].particle_list) > self.n_particles:
             self.tree.nodes[h].particle_list = self.tree.nodes[h].particle_list[1:]
+        
         self.tree.nodes[h].n_visits += 1
         self.tree.nodes[ha].n_visits += 1
         self.tree.nodes[ha].value += (total_reward - self.tree.nodes[ha].value)/self.tree.nodes[ha].n_visits
         return total_reward
         
-    def rollout(self, s, depth):
+    def rollout(self, s, h, simulator, depth):
         # Check significance of update
         if self.gamma**depth < self.epsilon:
             return 0
-            
+        
+        legal_actions = self.simulator.get_legal_actions_given_history(h)
+
         # Uniform random rollout policy
-        action = choice(s.valid_actions())
+        action = choice(legal_actions)
+
         
         # Generate states and observations from the simulator
         successor_state, observation, reward, is_terminal = self.simulator.step(s,action)
+        
         if is_terminal:
             return reward
-        return reward + self.gamma*self.rollout(successor_state, depth + 1)
+        if h == -1:
+            h = History()
+        h.add(action, observation)
+        return reward + self.gamma*self.rollout(successor_state, h, simulator,  depth + 1)
     def search_best_action(self, h):
         max_value = None
         ha = None
@@ -106,5 +106,3 @@ class POMCP:
                     ha = child
                     best_action = action
         return best_action, ha
-
-    
