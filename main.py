@@ -33,5 +33,6 @@ while time < 100:
     pomcp.tree.prune_and_make_new_root(action, observation)
     print('Historico oficial')
     h.print_history()
+    state_from_history, _ = simulator.get_dummy_state_and_legal_actions_given_history(h)
     #Now update the belief state
-    pomcp.tree.nodes[pomcp.tree.root_key].particle_list = particle_list_update(simulator, old_particle_list, h, action, observation)
+    pomcp.tree.nodes[pomcp.tree.root_key].particle_list = particle_list_update(simulator, old_particle_list, state_from_history, action, observation)

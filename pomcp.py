@@ -36,7 +36,7 @@ class POMCP:
         # Check significance of update
         if self.gamma**depth < self.epsilon:
             return 0
-        legal_actions = self.simulator.get_legal_actions_given_history(h)
+        _, legal_actions = self.simulator.get_dummy_state_and_legal_actions_given_history(h)
         if self.flag_for_first_tree_expansion == False or self.tree.is_history_in_tree(h):
             for action in legal_actions:
                 self.tree.expand(h, action, isAction=True)
@@ -71,7 +71,7 @@ class POMCP:
         if self.gamma**depth < self.epsilon:
             return 0
         
-        legal_actions = self.simulator.get_legal_actions_given_history(h)
+        legal_actions = self.simulator.get_legal_actions_given_state(s)
 
         # Uniform random rollout policy
         action = choice(legal_actions)
@@ -100,7 +100,6 @@ class POMCP:
                     return action, child
                 ucb = self.tree.calculate_UCB(self.tree.nodes[h].n_visits, self.tree.nodes[child].n_visits, 
                 self.tree.nodes[child].value, self.c)
-                #print('action: ', action, 'children len: ', len(children), 'Valor ucb: ', ucb)
                 if max_value is None or max_value < ucb:
                     max_value = ucb
                     ha = child
