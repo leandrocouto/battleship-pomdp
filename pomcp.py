@@ -9,12 +9,12 @@ import random
 import copy
 
 class POMCP:
-    def __init__(self, simulator, gamma, c, epsilon, timeout, n_particles):
+    def __init__(self, simulator, gamma, c, epsilon, n_simulations, n_particles):
         self.gamma = gamma
         self.simulator = simulator
         self.epsilon = epsilon
         self.c = c
-        self.timeout = timeout
+        self.n_simulations = n_simulations
         self.n_particles = n_particles
         self.tree = Tree()
         self.flag_for_first_tree_expansion = False
@@ -23,9 +23,7 @@ class POMCP:
         if len(h.history_list) == 0:
             self.tree.nodes[self.tree.root_key].particle_list = sample_random_particles(self.n_particles)
         #Loop until timeout
-        for i in range(self.timeout):
-            if i%10 == 0:
-                print(i)
+        for i in range(self.n_simulations):
             state = choice(self.tree.nodes[self.tree.root_key].particle_list)
             self.simulate(state, h, 0)
         best_action, _ = self.search_best_action(self.tree.root_key)
@@ -56,10 +54,6 @@ class POMCP:
         # Estimate node Value
         total_reward += reward + self.gamma*self.simulate(sample_state, hao, depth + 1)
         self.tree.nodes[h].particle_list.append(s)
-        #Just in case adding the new state in the particles list reaches the total 
-        #number of particles set previously
-        if len(self.tree.nodes[h].particle_list) > self.n_particles:
-            self.tree.nodes[h].particle_list = self.tree.nodes[h].particle_list[1:]
         
         self.tree.nodes[h].n_visits += 1
         self.tree.nodes[ha].n_visits += 1
